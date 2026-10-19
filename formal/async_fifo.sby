@@ -1,0 +1,39 @@
+# SymbiYosys job for async_fifo.
+#   sby -f formal/async_fifo.sby          (all tasks)
+#   sby -f formal/async_fifo.sby bmc_d4   (one task)
+#
+# Data width is 1 bit: the pointer / flag logic does not depend on the data
+# width, and a single tracked bit still exposes any lost, duplicated or
+# reordered word because the solver picks the data freely.
+
+[tasks]
+bmc_d2
+bmc_d4
+cover_d4
+
+[options]
+bmc_d2:   mode bmc
+bmc_d2:   depth 22
+bmc_d4:   mode bmc
+bmc_d4:   depth 18
+cover_d4: mode cover
+cover_d4: depth 40
+multiclock on
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal sync_2ff.sv fifo_mem.sv wptr_full.sv rptr_empty.sv async_fifo.sv
+bmc_d2:   read -formal -DADDR_W=1 fifo_formal.sv
+bmc_d4:   read -formal -DADDR_W=2 fifo_formal.sv
+cover_d4: read -formal -DADDR_W=2 fifo_formal.sv
+prep -top fifo_formal
+
+[files]
+../rtl/sync_2ff.sv
+../rtl/fifo_mem.sv
+../rtl/wptr_full.sv
+../rtl/rptr_empty.sv
+../rtl/async_fifo.sv
+fifo_formal.sv

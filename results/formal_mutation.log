@@ -1,0 +1,8 @@
+full compare inverts one MSB (expected survivor: beyond bound) survived (expected)  bmc: PASS  cover: PASS
+write allowed while full                                       killed               bmc: FAIL  cover: PASS
+read pointer advances while empty                              killed               bmc: FAIL  cover: PASS
+empty compares current pointer, not next                       killed               bmc: FAIL  cover: PASS
+binary pointer sent across instead of Gray                     killed               bmc: FAIL  cover: PASS
+single-flop synchronizer (expected survivor)                   survived (expected)  bmc: PASS  cover: PASS
+--------------------------------------------------------------------------
+4 / 4 mutants caught (plus 2 expected survivors)

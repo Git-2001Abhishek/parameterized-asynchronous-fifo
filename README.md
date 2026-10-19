@@ -1,5 +1,7 @@
 # Parameterized Asynchronous FIFO
 
+[![CI](https://github.com/Git-2001Abhishek/parameterized-asynchronous-fifo/actions/workflows/ci.yml/badge.svg)](https://github.com/Git-2001Abhishek/parameterized-asynchronous-fifo/actions/workflows/ci.yml)
+
 ## Overview
 
 Designed and implemented a parameterized asynchronous FIFO in
@@ -15,6 +17,8 @@ clock domains.
 - Full and empty detection
 - Reset handling
 - SystemVerilog verification environment
+- Formal verification with SymbiYosys (both clocks fully asynchronous)
+- Continuous integration (GitHub Actions)
 
 ## Architecture
 
@@ -134,6 +138,61 @@ Synthesis (Yosys, generic gates, 8 x 16) - [`results/synth_stat.txt`](results/sy
 128 enable-flops for storage, 40 flops for pointers / flags / synchronizers,
 no latches.
 
+## Formal verification
+
+[`formal/fifo_formal.sv`](formal/fifo_formal.sv) and
+[`formal/async_fifo.sby`](formal/async_fifo.sby) check the FIFO with
+SymbiYosys in **multiclock** mode. `wclk` and `rclk` are free inputs that
+can toggle independently, so the solver explores every phase and frequency
+relationship between the two domains, not just the handful of clock ratios
+used in simulation.
+
+Properties:
+
+| Property | Meaning |
+| --- | --- |
+| No overflow | a write is never accepted while `DEPTH` words are stored |
+| No underflow | a read is never accepted while the FIFO is empty |
+| Data integrity and ordering | an arbitrary (solver-chosen) write number N is tracked, and the N-th accepted read must return exactly that word. Because N is free, this covers every word |
+| Safe flags | `wfull = 0` implies there is space; `rempty = 0` implies there is data |
+| Cover | the FIFO can hold `DEPTH` words, become full, and drain back to empty |
+
+Results (`make formal`):
+
+| Task | Configuration | Result |
+| --- | --- | --- |
+| `bmc_d2` | depth-2 FIFO, 22 steps (pointers wrap several times) | **PASS** |
+| `bmc_d4` | depth-4 FIFO, 18 steps (past a full fill and drain) | **PASS** |
+| `cover_d4` | depth-4 FIFO | `DEPTH` words stored and full at step 8, full → empty at step 15 |
+
+These are **bounded** proofs: no property can fail within that many
+global time steps, from reset, for any input and clock behaviour. An
+unbounded (k-induction) proof would need extra invariants on the
+synchronizer stages and is not done here. The data width is 1 bit in the
+formal runs: the pointer and flag logic doesn't depend on it, and a free
+1-bit word still exposes any lost, duplicated or reordered entry.
+
+**Formal mutation testing** ([`scripts/formal_mutate.py`](scripts/formal_mutate.py),
+[`results/formal_mutation.log`](results/formal_mutation.log)):
+
+| Injected bug | Result |
+| --- | --- |
+| Write allowed while full | **caught**: overflow assertion fails |
+| Read pointer advances while empty | **caught**: underflow assertion fails |
+| Empty compares the current pointer instead of the next one | **caught** |
+| Binary pointer sent across the clock boundary instead of Gray | **caught** |
+| Full compare inverts one MSB instead of two | not caught within the bound, even on a depth-4 FIFO. The shortest overflow trace is about 25 steps (reader at pointer 2, then 5 more writes), beyond the 18-step bound, and each extra step roughly doubles z3's runtime. **Simulation catches it** (thousands of errors) |
+| Single-flop synchronizer | not caught, as expected: see below |
+
+Running this check also improved the harness. The first version only
+asserted *safety*, so a too-early `wfull` went unnoticed. A
+`cover (stored == DEPTH)` goal was added so that losing capacity is
+detected as well.
+
+One limit applies to both formal and simulation: they use zero-delay
+models without metastability, so a missing synchronizer flop is
+functionally invisible. That bug class needs structural CDC checks.
+
 ## How to run
 
 Requires Icarus Verilog 12+ (`-g2012`).
@@ -144,6 +203,8 @@ make sim ADDR_WIDTH=3 DATA_WIDTH=16 WCLK_HALF=9.0 RCLK_HALF=4.0
 make regress                              # all configurations above
 make wave                                 # open the VCD in GTKWave
 make lint                                 # Verilator -Wall lint (clean)
+make formal                               # SymbiYosys bounded proofs + cover
+make formal-mutate                        # check injected bugs break the formal checks
 python scripts/plot_vcd.py results/async_fifo.vcd out.png --start 60 --end 420 \
     --signals tb_async_fifo.wclk tb_async_fifo.winc tb_async_fifo.wfull
 ```
@@ -160,6 +221,8 @@ vvp -n sim.vvp
 - SystemVerilog
 - Icarus Verilog / Verilator
 - Yosys (synthesis check)
+- SymbiYosys + z3 (formal)
+- GitHub Actions (CI)
 - GTKWave / Python + matplotlib (waveforms)
 
 ## Repository Structure
@@ -167,8 +230,10 @@ vvp -n sim.vvp
 ```text
 rtl/        - RTL source files
 tb/         - Testbench
-scripts/    - Regression and waveform-plotting scripts
-results/    - Simulation results and waveforms
+formal/     - Formal harness and SymbiYosys job
+scripts/    - Regression, formal mutation and waveform-plotting scripts
+results/    - Simulation and formal results, waveforms
+.github/    - CI workflow
 ```
 
 ## References

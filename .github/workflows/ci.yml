@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  simulation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: YosysHQ/setup-oss-cad-suite@v3
+      - name: Lint (Verilator -Wall)
+        run: make lint
+      - name: Simulation (default configuration)
+        run: make sim
+      - name: Regression (7 width / depth / clock-ratio configurations)
+        run: make regress
+
+  formal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: YosysHQ/setup-oss-cad-suite@v3
+      - name: Bounded proofs + cover (SymbiYosys)
+        run: make formal
+      - name: Mutation testing (formal)
+        run: make formal-mutate
