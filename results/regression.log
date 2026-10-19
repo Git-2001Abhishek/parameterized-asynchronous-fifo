@@ -1,0 +1,7 @@
+fast-write           DATA_WIDTH=8 DEPTH=16 wclk=10.0ns rclk=17.0ns           PASS
+fast-read            DATA_WIDTH=8 DEPTH=16 wclk=17.0ns rclk=10.0ns           PASS
+equal-clocks-d4      DATA_WIDTH=16 DEPTH=4 wclk=10.0ns rclk=10.0ns           PASS
+ratio-7x-d8          DATA_WIDTH=32 DEPTH=8 wclk=6.0ns rclk=42.0ns            PASS
+ratio-7x-rev-d8      DATA_WIDTH=32 DEPTH=8 wclk=42.0ns rclk=6.0ns            PASS
+depth64-slow-write   DATA_WIDTH=8 DEPTH=64 wclk=26.0ns rclk=8.0ns            PASS
+depth2-min           DATA_WIDTH=4 DEPTH=2 wclk=10.0ns rclk=13.0ns            PASS

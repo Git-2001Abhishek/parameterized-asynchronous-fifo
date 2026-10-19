@@ -1,0 +1,27 @@
+
+7. Printing statistics.
+
+=== async_fifo ===
+
+        +----------Local Count, excluding submodules.
+        | 
+      246 wires
+      484 wire bits
+       70 public wires
+      308 public wire bits
+       10 ports
+       24 port bits
+      378 cells
+        9   $_ANDNOT_
+       38   $_AND_
+      128   $_DFFE_PP_
+       39   $_DFF_PN0_
+        1   $_DFF_PN1_
+      121   $_MUX_
+        1   $_NAND_
+       10   $_NOR_
+        5   $_NOT_
+       18   $_XNOR_
+        3   $_XOR_
+        5   $scopeinfo
+

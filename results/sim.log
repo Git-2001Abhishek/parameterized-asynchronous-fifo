@@ -1,0 +1,26 @@
+VCD info: dumpfile results/async_fifo.vcd opened for output.
+async_fifo: DATA_WIDTH=8 DEPTH=16 wclk=10.0ns rclk=17.0ns
+[0] TEST 1: reset values
+[68000] TEST 2: fill to full
+[332000] TEST 3: drain to empty
+[723000] TEST 4: random simultaneous traffic (2000 cycles, wr 70%, rd 40%)
+[34927000] TEST 4: random simultaneous traffic (2000 cycles, wr 40%, rd 70%)
+[69131000] TEST 4: random simultaneous traffic (2000 cycles, wr 50%, rd 50%)
+[103335000] TEST 5: reset during traffic
+[103981000] TEST 6: pointer wrap-around (4 x fill/drain)
+[103981000] TEST 2: fill to full
+[104253000] TEST 3: drain to empty
+[104644000] TEST 2: fill to full
+[104916000] TEST 3: drain to empty
+[105307000] TEST 2: fill to full
+[105579000] TEST 3: drain to empty
+[105970000] TEST 2: fill to full
+[106242000] TEST 3: drain to empty
+--------------------------------------------------
+writes accepted : 2006
+reads accepted  : 1997
+writes blocked by full : 1367
+reads blocked by empty : 1283
+TEST PASSED
+--------------------------------------------------
+tb/tb_async_fifo.sv:278: $finish called at 106632500 (1ps)

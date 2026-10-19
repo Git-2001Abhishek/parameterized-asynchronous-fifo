@@ -1,0 +1,3 @@
+*.vvp
+*.vcd
+__pycache__/
