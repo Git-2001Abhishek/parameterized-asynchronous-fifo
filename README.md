@@ -71,7 +71,12 @@ clock domains using two-stage synchronizers.
 - `rdata` is first-word-fall-through: valid whenever `rempty` is low.
 - Writes while full and reads while empty are ignored.
 - Each domain has its own active-low asynchronous reset (`wrst_n`, `rrst_n`).
-  Reset both together to clear the FIFO.
+  Reset both together to clear the FIFO: resetting only one side would leave
+  the pointers inconsistent.
+- The resets are asserted asynchronously, but their **deassertion must be
+  synchronous** to the respective clock. In a real SoC, drive each one from a
+  standard reset synchronizer in that clock domain. The FIFO doesn't include
+  one, so it can share the system's reset tree.
 
 ## Verification
 
@@ -138,7 +143,7 @@ make sim                                  # default config, writes results/sim.l
 make sim ADDR_WIDTH=3 DATA_WIDTH=16 WCLK_HALF=9.0 RCLK_HALF=4.0
 make regress                              # all configurations above
 make wave                                 # open the VCD in GTKWave
-make lint                                 # Verilator lint
+make lint                                 # Verilator -Wall lint (clean)
 python scripts/plot_vcd.py results/async_fifo.vcd out.png --start 60 --end 420 \
     --signals tb_async_fifo.wclk tb_async_fifo.winc tb_async_fifo.wfull
 ```

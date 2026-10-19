@@ -26,7 +26,7 @@ lint:
 	verilator --lint-only -Wall --top-module async_fifo $(RTL)
 
 wave:
-	gtkwave results/async_fifo.vcd results/async_fifo.gtkw &
+	gtkwave results/async_fifo.vcd &
 
 clean:
 	rm -f results/*.vvp results/*.vcd
